@@ -12,110 +12,131 @@
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
-*/
+ */
 package com.sohlman.profiler;
 
 public class Watch {
 	private String methodName;
 	private String className;
 	private String text;
-	private long start=0;
-	private long end=0;
-	private long duration=-1;
-	
+	private long start = 0;
+	private long end = 0;
+	private long duration = -1;
+
 	Watch(Watch parent) {
-		this.parent =parent;
-		start=System.currentTimeMillis();
+		this.parent = parent;
+		start = System.currentTimeMillis();
 	}
-	
+
 	private Watch next = null;
 	private Watch firstChild = null;
 	private Watch lastChild = null;
 	private Watch parent = null;
-	
+
 	void setNext(Watch watch) {
 		next = watch;
 	}
-	
+
 	void addChild(Watch watch) {
-		if(firstChild==null) {
-			firstChild=watch;
-			lastChild=watch;
-		}
-		else {
+		if (firstChild == null) {
+			firstChild = watch;
+			lastChild = watch;
+		} else {
 			lastChild.setNext(watch);
-			lastChild=watch;
+			lastChild = watch;
 		}
 	}
-	
+
 	Watch getNext() {
 		return next;
 	}
-	
+
 	Watch getParent() {
 		return parent;
 	}
-	
+
 	Watch getFirstChild() {
 		return firstChild;
 	}
-	
-	public boolean isRoot() {
-		return parent==null;
+
+	long getTimeMillisToNext() {
+		if (getFirstChild() != null)
+			return getFirstChild().getStartTimeMillis() - getStartTimeMillis();
+		if (getNext() != null)
+			return getNext().getStartTimeMillis() - getEndTimeMillis();
+		if (getParent() != null) {
+			return getMillisFromParent(getParent());
+		}
+		return 0;
 	}
-	
+
+	private long getMillisFromParent(Watch watch) {
+		if (watch.getNext() != null) {
+			return getParent().getNext().getStartTimeMillis()
+					- getStartTimeMillis();
+		} else if (watch.getParent() != null) {
+			return getMillisFromParent(watch.getParent());
+		} else {
+			return watch.getEndTimeMillis() - getEndTimeMillis();
+		}
+	}
+
+	public boolean isRoot() {
+		return parent == null;
+	}
+
 	public boolean hasChilds() {
 		return firstChild != null;
 	}
-	
+
 	public boolean hasNext() {
-		return next!=null;
+		return next != null;
 	}
-	
+
 	public String getText() {
 		return this.text;
 	}
-	
+
 	public String getClassName() {
 		return this.className;
 	}
-	
+
 	public String getMethodName() {
 		return this.methodName;
 	}
-	
+
 	@Override
 	public boolean equals(Object object) {
-		return this==object;
+		return this == object;
 	}
-	
+
 	void stop(String className, String methodName, String text) {
 		stop();
 		this.className = className;
 		this.methodName = methodName;
 		this.text = text;
-	}	
-	
+	}
+
 	private void stop() {
-		if(this.end==0) {
+		if (this.end == 0) {
 			this.end = System.currentTimeMillis();
 		}
 		this.duration = this.end - this.start;
 	}
-	
-	public long getDuration() {
+
+	public long getDurationInMillis() {
 		return this.duration;
 	}
-	
-	public long getStart() {
+
+	public long getStartTimeMillis() {
 		return this.start;
 	}
-	
-	public long getEnd() {
+
+	public long getEndTimeMillis() {
 		return this.end;
 	}
-	
+
 	public boolean isRunning() {
-		return this.duration==-1;
+		return this.duration == -1;
 	}
 }
