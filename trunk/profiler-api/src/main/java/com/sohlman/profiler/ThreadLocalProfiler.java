@@ -15,6 +15,7 @@
 */
 package com.sohlman.profiler;
 
+import java.lang.reflect.Method;
 import java.util.Formatter;
 
 public class ThreadLocalProfiler {
@@ -72,7 +73,7 @@ public class ThreadLocalProfiler {
 			String text) {
 		watchCounter--;
 		watch.stop(className, methodName, text);
-		lastEndTime = watch.getEnd();
+		lastEndTime = watch.getEndTimeMillis();
 		current = watch.getParent();
 	}
 
@@ -81,8 +82,20 @@ public class ThreadLocalProfiler {
 	}
 
 	public static void stop(Watch watch, String text) {
-		stop(watch, null, null, text);
+		stop(watch, (String)null, (String)null, text);
 	}
+	
+	public static void stop(Watch watch, Class clazz, String methodName, String text) {
+		stop(watch, clazz!=null?clazz.getName():"<no class>",methodName, text);
+	}
+	
+	public static void stop(Watch watch, Class clazz, String methodName) {
+		stop(watch, clazz!=null?clazz.getName():"<no class>",methodName, null);
+	}	
+	
+	public static void stop(Watch watch, Class clazz, Method method) {
+		stop(watch, clazz!=null?clazz.getName():"<no class>", method!=null?method.getName():"<no method>", null);
+	}	
 
 	public static void stop(Watch watch, String className, String methodName) {
 		stop(watch, className, methodName, null);
@@ -107,6 +120,10 @@ public class ThreadLocalProfiler {
 		} else {
 			return null;
 		}
+	}
+	
+	public static boolean isSetupDone(){
+		 return threadProfiler.get()!=null;
 	}
 
 	public static boolean isRunning() {
@@ -153,14 +170,11 @@ public class ThreadLocalProfiler {
 	}
 
 	private void write(Watch watch, StringBuilder stringBuilder, int level) {
-		long start = watch.getStart();
-		long end = watch.getEnd();
-		long fromStart = watch.getStart() - root.getStart();
-		long timeSpend = watch.getEnd() - watch.getStart();
-		long toNext = watch.getFirstChild() != null ? watch.getFirstChild()
-				.getStart() - start : (watch.getNext() != null ? watch.getNext()
-				.getStart() - end : (watch.getParent() != null ? watch
-				.getParent().getEnd() - end : 0));
+		long start = watch.getStartTimeMillis();
+		long end = watch.getEndTimeMillis();
+		long fromStart = watch.getStartTimeMillis() - root.getStartTimeMillis();
+		long timeSpend = watch.getEndTimeMillis() - watch.getStartTimeMillis();
+		long toNext = watch.getTimeMillisToNext();
 		stringBuilder.append(String.format("%10d %10d %10d ", fromStart, timeSpend,
 				toNext));
 		addPrefixes('-', level, stringBuilder);

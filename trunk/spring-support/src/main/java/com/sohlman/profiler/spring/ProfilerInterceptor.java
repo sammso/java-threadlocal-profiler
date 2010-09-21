@@ -12,7 +12,7 @@
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
-*/
+ */
 package com.sohlman.profiler.spring;
 
 import java.lang.reflect.Method;
@@ -31,12 +31,12 @@ public class ProfilerInterceptor implements MethodInterceptor {
 	public ProfilerInterceptor() {
 	}
 
-	private String getClassName(Method method, Invocation invocation) {
+	private Class getClass(Method method, Invocation invocation) {
 		Class declaringClass = method.getDeclaringClass();
 		if (declaringClass.isInstance(invocation.getThis())) {
 			declaringClass = invocation.getThis().getClass();
 		}
-		return declaringClass.getName();
+		return declaringClass;
 	}
 
 	/**
@@ -45,16 +45,19 @@ public class ProfilerInterceptor implements MethodInterceptor {
 
 	@Override
 	public Object invoke(MethodInvocation invocation) throws Throwable {
-		Method method = invocation.getMethod();
-		String methodName = method.getName();
-		String className = getClassName(method, invocation);
-		Watch watch = null;
-		try {
-			watch = ThreadLocalProfiler.start();
-			return invocation.proceed();
+		if (ThreadLocalProfiler.isSetupDone()) {
+			Method method = invocation.getMethod();
+			Class invocatedClass = getClass(method, invocation);
+			Watch watch = null;
+			try {
+				watch = ThreadLocalProfiler.start();
+				return invocation.proceed();
 
-		} finally {
-			ThreadLocalProfiler.stop(watch, className, methodName);
+			} finally {
+				ThreadLocalProfiler.stop(watch, invocatedClass, method);
+			}
+		} else {
+			return invocation.proceed();
 		}
 
 	}

@@ -12,7 +12,7 @@
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
-*/
+ */
 package com.sohlman.profiler.liferay.filter;
 
 import javax.servlet.FilterChain;
@@ -31,13 +31,17 @@ public class ProfilerFilter extends BasePortalFilter {
 			HttpServletResponse response, FilterChain filterChain)
 			throws Exception {
 		if (isAlreadyFiltered(request)) {
-			processFilter(request, response, filterChain);
+			processFilter(ProfilerFilter.class, request,
+
+			response, filterChain);
 		} else {
 			Watch watch = null;
 			try {
 				ThreadLocalProfiler.setup();
 				watch = ThreadLocalProfiler.start();
-				processFilter(request, response, filterChain);
+				processFilter(ProfilerFilter.class, request,
+
+				response, filterChain);
 			} finally {
 				ThreadLocalProfiler.stop(watch, request.getRequestURI() + "?"
 						+ request.getQueryString());
