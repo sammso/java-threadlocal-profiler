@@ -22,8 +22,15 @@ public class Watch {
 	private long start = 0;
 	private long end = 0;
 	private long duration = -1;
+	private int level;
 
 	Watch(Watch parent) {
+		if(parent==null) {
+			this.level = 0;
+		}
+		else {
+			this.level = parent.getLevel() + 1;
+		}
 		this.parent = parent;
 		start = System.currentTimeMillis();
 	}
@@ -37,6 +44,10 @@ public class Watch {
 		next = watch;
 	}
 
+	public int getLevel() {
+		return this.level;
+	}
+	
 	void addChild(Watch watch) {
 		if (firstChild == null) {
 			firstChild = watch;
@@ -59,7 +70,7 @@ public class Watch {
 		return firstChild;
 	}
 
-	long getTimeMillisToNext() {
+	public long getTimeToNextMillis() {
 		if (getFirstChild() != null)
 			return getFirstChild().getStartTimeMillis() - getStartTimeMillis();
 		if (getNext() != null)
