@@ -70,7 +70,7 @@ public class ThreadProfilerTest {
 	private String ROWINDENTIFIER = "ROWINDENTIFIER";
 	
 	@Test
-	public void testRecursive() throws Exception {
+	public void testRecursiveWithThreshold() throws Exception {
 		Watch watch = ThreadLocalProfiler.start();
 		method(0, 1, 5);
 		ThreadLocalProfiler.stop(watch, "root");
@@ -80,6 +80,35 @@ public class ThreadProfilerTest {
 		
 		System.out.println(reportString);
 		
+		verifyTree(watches);
+		
+		Assert.assertTrue("Verify report threshold from text report", reportString.indexOf(THRESHOLD)>=0);
+		Assert.assertTrue("Verify report row identifier from text report",reportString.indexOf(ROWINDENTIFIER)>=0);
+		
+		ThreadLocalProfiler.tearDown();
+	}
+	
+	@Test
+	public void testRecursiveWithWithoutThreshold() throws Exception {
+		Watch watch = ThreadLocalProfiler.start();
+		method(0, 1, 5);
+		ThreadLocalProfiler.stop(watch, "root");
+		Watch[] watches = ThreadLocalProfiler.report();
+		
+		// use big threshold
+		String reportString = ToStringUtil.writeReport(watches, 10000, THRESHOLD,ROWINDENTIFIER);
+		
+		System.out.println(reportString);
+		
+		verifyTree(watches);
+		
+		Assert.assertFalse("Verify report threshold from text report", reportString.indexOf(THRESHOLD)>=0);
+		Assert.assertTrue("Verify report row identifier from text report",reportString.indexOf(ROWINDENTIFIER)>=0);
+		
+		ThreadLocalProfiler.tearDown();
+	}	
+
+	private void verifyTree(Watch[] watches) throws Exception {
 		long totalMillis = watches[0].getElapsedInMillis();
 		long millisCounter=watches[0].getTimeToNextMillis();
 		
@@ -88,13 +117,9 @@ public class ThreadProfilerTest {
 			millisCounter =+ watches[i].getElapsedInMillis();
 		}
 		
-		Assert.assertEquals(totalMillis, totalMillis);
-		Assert.assertTrue("Verify report threshold from text report", reportString.indexOf(THRESHOLD)>=0);
-		Assert.assertTrue("Verify report row identifier from text report",reportString.indexOf(ROWINDENTIFIER)>=0);
-		
-		ThreadLocalProfiler.tearDown();
+		Assert.assertEquals(totalMillis, totalMillis);		
 	}
-
+	
 	@Test
 	public void testNotAllStopped() throws Exception {
 		Watch w1 = ThreadLocalProfiler.start();
