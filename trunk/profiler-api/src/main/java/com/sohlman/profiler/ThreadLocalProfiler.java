@@ -18,6 +18,28 @@ package com.sohlman.profiler;
 import java.lang.reflect.Method;
 import java.util.Formatter;
 
+/**
+ * Thread local profiler is little library for profiling measuring performance
+ * of applicatons.
+ * 
+ * It generates tree form report where it is easy to point out system
+ * bottlenecks. It collects data to ThreadLocal variable, so with this is easy
+ * find out what is taking time.
+ * 
+ * Design is not intrusive so no additional dependencies are required.
+ * 
+ * Usage measuring:
+ * 
+ * Watch watch = ThreadLocalProfiler.start(); ThreadLocalProfiler.stop(watch,
+ * getClass(), "doIt","integration time");
+ * 
+ * Usage: report
+ * 
+ * Watch[] watches = ThreadLocalProfiler.report();
+ * 
+ * @author Sampsa Sohlman http://sampsa.sohlman.com
+ * 
+ */
 public class ThreadLocalProfiler {
 
 	private static ThreadLocal<ThreadLocalProfiler> threadProfiler = new ThreadLocal<ThreadLocalProfiler>();
@@ -26,22 +48,11 @@ public class ThreadLocalProfiler {
 	private Watch current;
 	private int activeWatchCounter;
 	private int watchCounter;
-	private long lastEndTime;
-
-	private Formatter formatter;
 
 	private ThreadLocalProfiler() {
 		// Not allowed to create
 		activeWatchCounter = 0;
 		watchCounter = 0;
-	}
-
-	public static void setup() {
-		ThreadLocalProfiler profiler = threadProfiler.get();
-		if (profiler == null) {
-			profiler = new ThreadLocalProfiler();
-			threadProfiler.set(profiler);
-		}
 	}
 
 	/**
@@ -50,11 +61,11 @@ public class ThreadLocalProfiler {
 	 */
 	public static Watch start() {
 		ThreadLocalProfiler profiler = threadProfiler.get();
-		if (profiler != null) {
-			return profiler.doStart();
-		} else {
-			return null;
+		if (!isRunning(profiler)) {
+			profiler = new ThreadLocalProfiler();
+			threadProfiler.set(profiler);
 		}
+		return profiler.doStart();
 	}
 
 	private Watch doStart() {
@@ -72,15 +83,30 @@ public class ThreadLocalProfiler {
 		return watch;
 	}
 
+	public static boolean isRunning() {
+		return isRunning(threadProfiler.get());
+	}
+
+	private static boolean isRunning(ThreadLocalProfiler profiler) {
+		if (profiler == null) {
+			return false;
+		}
+		else if (profiler.getRoot() == null) {
+			return false;
+		} else {
+			return profiler.current!=null;
+		}
+	}
+	
+	
 	private void doStop(Watch watch, String className, String methodName,
 			String text) {
 		activeWatchCounter--;
 		watch.stop(className, methodName, text);
-		lastEndTime = watch.getEndTimeMillis();
 		current = watch.getParent();
 	}
 
-	private Watch doGetRoot() {
+	Watch getRoot() {
 		return root;
 	}
 
@@ -120,28 +146,9 @@ public class ThreadLocalProfiler {
 		profiler.doStop(watch, className, methodName, text);
 	}
 
-	public static Watch getRoot() {
-		ThreadLocalProfiler profiler = threadProfiler.get();
-		if (profiler != null) {
-			return profiler.doGetRoot();
-		} else {
-			return null;
-		}
-	}
-
-	public static boolean isSetupDone() {
-		return threadProfiler.get() != null;
-	}
-
-	public static boolean isRunning() {
-		ThreadLocalProfiler profiler = threadProfiler.get();
-		if (profiler == null) {
-			return false;
-		} else {
-			return profiler.isRunning();
-		}
-	}
-
+	/**
+	 * Removes profiler from current thread
+	 */
 	public static void tearDown() {
 		threadProfiler.remove();
 	}
@@ -177,64 +184,5 @@ public class ThreadLocalProfiler {
 			}
 			watch = watch.getNext();
 		} while (watch != null);
-	}
-
-	public static String printReport() {
-		ThreadLocalProfiler profiler = threadProfiler.get();
-		if (profiler == null) {
-			return "";
-		} else {
-			return profiler.doPrintReport();
-		}
-	}
-
-	private String doPrintReport() {
-		StringBuilder stringBuilder = new StringBuilder(4096);
-		stringBuilder
-				.append("\n")
-				.append(String.format("%10s %10s %10s ", "Start", "Elapsed",
-						"ToNext")).append("\n");
-		doPrintReport(stringBuilder, this.root, 0);
-		return stringBuilder.toString();
-	}
-
-	private void doPrintReport(StringBuilder stringBuilder, Watch watch,
-			int level) {
-		do {
-			write(watch, stringBuilder, level);
-			if (watch.hasChilds()) {
-				doPrintReport(stringBuilder, watch.getFirstChild(), level + 1);
-			}
-			watch = watch.getNext();
-		} while (watch != null);
-	}
-
-	private void write(Watch watch, StringBuilder stringBuilder, int level) {
-		long start = watch.getStartTimeMillis();
-		long end = watch.getEndTimeMillis();
-		long fromStart = watch.getStartTimeMillis() - root.getStartTimeMillis();
-		long timeSpend = watch.getEndTimeMillis() - watch.getStartTimeMillis();
-		long toNext = watch.getTimeToNextMillis();
-		stringBuilder.append(String.format("%10d %10d %10d ", fromStart,
-				timeSpend, toNext));
-		addPrefixes('-', level, stringBuilder);
-		boolean hasClassInfo = false;
-		if (watch.getClassName() != null && watch.getMethodName() != null) {
-			stringBuilder.append(watch.getClassName()).append('.')
-					.append(watch.getMethodName()).append("(..)");
-			hasClassInfo = true;
-		} else if (watch.getText() != null) {
-			if (hasClassInfo) {
-				stringBuilder.append(" - ");
-			}
-			stringBuilder.append(watch.getText());
-		}
-		stringBuilder.append('\n');
-	}
-
-	private void addPrefixes(char c, int length, StringBuilder stringBuilder) {
-		for (int i = 0; i < length; i++) {
-			stringBuilder.append(c);
-		}
 	}
 }

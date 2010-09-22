@@ -5,7 +5,13 @@
 	<artifactId>profiler</artifactId>
 	<packaging>pom</packaging>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>ThreadLocalProfiler project</name>
+	<name>ThreadLocalProfiler</name>
+	<description>Tree like simple profiling for java.</description>
+	<url>http://code.google.com/p/java-threadlocal-profiler/</url>
+	<organization>
+		<name>Sampsa Sohlman</name>
+		<url>http://sampsa.sohlman.com</url>
+	</organization>
 	<build>
 		<plugins>
 			<plugin>

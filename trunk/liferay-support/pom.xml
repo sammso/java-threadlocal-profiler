@@ -9,6 +9,12 @@
   <artifactId>profiler-liferay</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <name>ThreadLocalProfiler Liferay Filter</name>
+  <description>Liferay servlet filter for ThreadLocalProfiler.</description>
+  <url>http://code.google.com/p/java-threadlocal-profiler/</url>
+  <organization>
+  	<name>Sampsa Sohlman</name>
+  	<url>http://sampsa.sohlman.com</url>
+  </organization>  
   <dependencies>
   	<dependency>
   		<groupId>com.liferay.portal</groupId>

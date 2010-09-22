@@ -16,36 +16,50 @@
 package com.sohlman.profiler.liferay.filter;
 
 import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.liferay.portal.servlet.filters.BasePortalFilter;
 import com.sohlman.profiler.ThreadLocalProfiler;
+import com.sohlman.profiler.ToStringUtil;
 import com.sohlman.profiler.Watch;
 
 public class ProfilerFilter extends BasePortalFilter {
 	public final String SKIP_FILTER = getClass().getName() + "SKIP_FILTER";
+
+	private long alarmThresHoldMillis=5000;
+	
+	private String thresholdReached = "THRESHOLD-REACHED";
+	private String rowIdentifier = "THREADLOCALPROFILER";
+	
+	
+	@Override
+	public void init(FilterConfig filterConfig) {
+		// Write here portal-ext property reader for threshold and row identifier
+	}
 
 	@Override
 	protected void processFilter(HttpServletRequest request,
 			HttpServletResponse response, FilterChain filterChain)
 			throws Exception {
 		if (isAlreadyFiltered(request)) {
-			processFilter(ProfilerFilter.class, request,
-
-			response, filterChain);
+			processFilter(ProfilerFilter.class, request,response, filterChain);
+			
 		} else {
-			Watch watch = null;
+			Watch watch = ThreadLocalProfiler.start();
 			try {
-				ThreadLocalProfiler.setup();
-				watch = ThreadLocalProfiler.start();
-				processFilter(ProfilerFilter.class, request,
-
-				response, filterChain);
+				processFilter(ProfilerFilter.class, request,response, filterChain);
 			} finally {
 				String query = request.getQueryString();
-				ThreadLocalProfiler.stop(watch, query==null?request.getRequestURI(): request.getRequestURI() + "?");
-				getLog().info(ThreadLocalProfiler.printReport());
+				ThreadLocalProfiler.stop(
+						watch,
+						query == null ? request.getRequestURI() : request
+								.getRequestURI() + "?" + query);
+				getLog().info(
+						ToStringUtil.writeReport(ThreadLocalProfiler.report(),
+								alarmThresHoldMillis, thresholdReached,
+								rowIdentifier));
 				ThreadLocalProfiler.tearDown();
 			}
 		}

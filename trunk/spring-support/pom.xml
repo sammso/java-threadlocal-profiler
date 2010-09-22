@@ -9,6 +9,12 @@
   <artifactId>profiler-spring-support</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <name>ThreadLocalProfiler Spring support</name>
+  <description>Spring support for thread local profiler</description>
+  <url>http://code.google.com/p/java-threadlocal-profiler/</url>
+  <organization>
+  	<name>Sampsa Sohlman</name>
+  	<url>http://sampsa.sohlman.com</url>
+  </organization>
   <dependencies>
   	<dependency>
   		<groupId>org.springframework</groupId>
@@ -22,5 +28,7 @@
 		<artifactId>profiler-api</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
   	</dependency>
-  </dependencies>  
+  </dependencies>
+  <reporting>
+  </reporting>  
 </project>

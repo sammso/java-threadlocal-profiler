@@ -1,3 +1,18 @@
+/*
+   Copyright 2010 Sampsa Sohlman http://sampsa.sohlman.com
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+ */
 package com.sohlman.profiler;
 
 import junit.framework.Assert;
@@ -42,48 +57,75 @@ public class ThreadProfilerTest {
 	
 	@Test
 	public void testSimple() throws Exception {
-		ThreadLocalProfiler.setup();
 		Watch watch = ThreadLocalProfiler.start();
 		Assert.assertTrue(watch.isRunning());
 		ThreadLocalProfiler.stop(watch, "/root");
 		Assert.assertFalse(watch.isRunning());
-		System.out.println(ThreadLocalProfiler.printReport());
+		Watch[] watches = ThreadLocalProfiler.report();
+		Assert.assertEquals(1, watches.length);
 		ThreadLocalProfiler.tearDown();
 	}
-
+	
+	private String THRESHOLD = "THRESHOLD";
+	private String ROWINDENTIFIER = "ROWINDENTIFIER";
+	
 	@Test
-	public void watch() throws Exception {
-		ThreadLocalProfiler.setup();
+	public void testRecursive() throws Exception {
 		Watch watch = ThreadLocalProfiler.start();
 		method(0, 1, 5);
 		ThreadLocalProfiler.stop(watch, "root");
 		Watch[] watches = ThreadLocalProfiler.report();
 		
-		System.out.println(ToStringUtil.writeReport(watches, 10, "THRESHOLD","ROWINDENTIFIER"));
+		String reportString = ToStringUtil.writeReport(watches, 10, THRESHOLD,ROWINDENTIFIER);
 		
-		long totalMillis = watches[0].getDurationInMillis();
+		System.out.println(reportString);
+		
+		long totalMillis = watches[0].getElapsedInMillis();
 		long millisCounter=watches[0].getTimeToNextMillis();
 		
 		for(int i=1 ; i< watches.length ; i++) {
-			millisCounter =+ watches[i].getDurationInMillis();
-			millisCounter =+ watches[i].getDurationInMillis();
+			millisCounter =+ watches[i].getElapsedInMillis();
+			millisCounter =+ watches[i].getElapsedInMillis();
 		}
 		
 		Assert.assertEquals(totalMillis, totalMillis);
+		Assert.assertTrue("Verify report threshold from text report", reportString.indexOf(THRESHOLD)>=0);
+		Assert.assertTrue("Verify report row identifier from text report",reportString.indexOf(ROWINDENTIFIER)>=0);
 		
 		ThreadLocalProfiler.tearDown();
 	}
 
 	@Test
-	public void testRecursiveError1() throws Exception {
-		ThreadLocalProfiler.setup();
-		Watch watch = ThreadLocalProfiler.start();
-		System.out.println("hello");
-		Assert.assertTrue(watch.isRunning());
+	public void testNotAllStopped() throws Exception {
+		Watch w1 = ThreadLocalProfiler.start();
+		sleep(1);
+		Watch w2 = ThreadLocalProfiler.start();
+		sleep(1);
+		Watch w3 = ThreadLocalProfiler.start();
+		sleep(1);
+		ThreadLocalProfiler.stop(w3, "w3");		
+		ThreadLocalProfiler.stop(w1, "w1");
+		
+		Assert.assertEquals(w1.getEndTimeMillis(), w2.getEndTimeMillis());
+		Assert.assertNotSame(w1.getEndTimeMillis(), w3.getEndTimeMillis());
 	}	
-
-	@After
-	public void tearDown() throws Exception {
+	
+	@Test
+	public void testThreadPoolWithoutTearDown() throws Exception {
+		Watch w1 = ThreadLocalProfiler.start();
+		sleep(1);
+		Watch w2 = ThreadLocalProfiler.start();
+		sleep(1);
+		ThreadLocalProfiler.stop(w2, "w2");		
+		ThreadLocalProfiler.stop(w1, "w1");
+		
+		Watch w3 = ThreadLocalProfiler.start();
+		sleep(1);
+		Watch w4 = ThreadLocalProfiler.start();
+		sleep(1);
+		ThreadLocalProfiler.stop(w3, "w3");		
+		ThreadLocalProfiler.stop(w4, "w4");
+		
+		Assert.assertEquals(2,ThreadLocalProfiler.report().length);		
 	}
-
 }

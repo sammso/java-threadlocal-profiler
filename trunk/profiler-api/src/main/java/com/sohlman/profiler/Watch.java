@@ -16,6 +16,7 @@
 package com.sohlman.profiler;
 
 public class Watch {
+	private static String PROFILER_NOT_STOPPED_CORRECTLY = "PROFILER NOT STOPPED CORRECTLY";
 	private String methodName;
 	private String className;
 	private String text;
@@ -25,10 +26,9 @@ public class Watch {
 	private int level;
 
 	Watch(Watch parent) {
-		if(parent==null) {
+		if (parent == null) {
 			this.level = 0;
-		}
-		else {
+		} else {
 			this.level = parent.getLevel() + 1;
 		}
 		this.parent = parent;
@@ -47,7 +47,7 @@ public class Watch {
 	public int getLevel() {
 		return this.level;
 	}
-	
+
 	void addChild(Watch watch) {
 		if (firstChild == null) {
 			firstChild = watch;
@@ -68,6 +68,10 @@ public class Watch {
 
 	Watch getFirstChild() {
 		return firstChild;
+	}
+	
+	Watch getLastChild() {
+		return lastChild;
 	}
 
 	public long getTimeToNextMillis() {
@@ -122,20 +126,20 @@ public class Watch {
 	}
 
 	void stop(String className, String methodName, String text) {
-		stop();
-		this.className = className;
-		this.methodName = methodName;
-		this.text = text;
-	}
-
-	private void stop() {
 		if (this.end == 0) {
 			this.end = System.currentTimeMillis();
+			this.duration = this.end - this.start;
+			
+			this.className = className;
+			this.methodName = methodName;
+			this.text = text;
+			if( lastChild!=null) {
+				lastChild.stop(null, null,PROFILER_NOT_STOPPED_CORRECTLY);
+			}
 		}
-		this.duration = this.end - this.start;
 	}
 
-	public long getDurationInMillis() {
+	public long getElapsedInMillis() {
 		return this.duration;
 	}
 
