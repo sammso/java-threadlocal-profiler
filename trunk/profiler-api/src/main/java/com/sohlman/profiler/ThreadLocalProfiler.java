@@ -12,7 +12,7 @@
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
-*/
+ */
 package com.sohlman.profiler;
 
 import java.lang.reflect.Method;
@@ -24,13 +24,15 @@ public class ThreadLocalProfiler {
 
 	private Watch root;
 	private Watch current;
-	private long watchCounter;
+	private int activeWatchCounter;
+	private int watchCounter;
 	private long lastEndTime;
 
 	private Formatter formatter;
 
 	private ThreadLocalProfiler() {
 		// Not allowed to create
+		activeWatchCounter = 0;
 		watchCounter = 0;
 	}
 
@@ -64,6 +66,7 @@ public class ThreadLocalProfiler {
 			watch = new Watch(current);
 			current.addChild(watch);
 		}
+		activeWatchCounter++;
 		watchCounter++;
 		current = watch;
 		return watch;
@@ -71,7 +74,7 @@ public class ThreadLocalProfiler {
 
 	private void doStop(Watch watch, String className, String methodName,
 			String text) {
-		watchCounter--;
+		activeWatchCounter--;
 		watch.stop(className, methodName, text);
 		lastEndTime = watch.getEndTimeMillis();
 		current = watch.getParent();
@@ -82,20 +85,24 @@ public class ThreadLocalProfiler {
 	}
 
 	public static void stop(Watch watch, String text) {
-		stop(watch, (String)null, (String)null, text);
+		stop(watch, (String) null, (String) null, text);
 	}
-	
-	public static void stop(Watch watch, Class clazz, String methodName, String text) {
-		stop(watch, clazz!=null?clazz.getName():"<no class>",methodName, text);
+
+	public static void stop(Watch watch, Class clazz, String methodName,
+			String text) {
+		stop(watch, clazz != null ? clazz.getName() : "<no class>", methodName,
+				text);
 	}
-	
+
 	public static void stop(Watch watch, Class clazz, String methodName) {
-		stop(watch, clazz!=null?clazz.getName():"<no class>",methodName, null);
-	}	
-	
+		stop(watch, clazz != null ? clazz.getName() : "<no class>", methodName,
+				null);
+	}
+
 	public static void stop(Watch watch, Class clazz, Method method) {
-		stop(watch, clazz!=null?clazz.getName():"<no class>", method!=null?method.getName():"<no method>", null);
-	}	
+		stop(watch, clazz != null ? clazz.getName() : "<no class>",
+				method != null ? method.getName() : "<no method>", null);
+	}
 
 	public static void stop(Watch watch, String className, String methodName) {
 		stop(watch, className, methodName, null);
@@ -121,9 +128,9 @@ public class ThreadLocalProfiler {
 			return null;
 		}
 	}
-	
-	public static boolean isSetupDone(){
-		 return threadProfiler.get()!=null;
+
+	public static boolean isSetupDone() {
+		return threadProfiler.get() != null;
 	}
 
 	public static boolean isRunning() {
@@ -137,6 +144,39 @@ public class ThreadLocalProfiler {
 
 	public static void tearDown() {
 		threadProfiler.remove();
+	}
+
+	private static Watch[] EMTPY_REPORT = new Watch[0];
+
+	public static Watch[] report() {
+		ThreadLocalProfiler profiler = threadProfiler.get();
+		if (profiler == null) {
+			return EMTPY_REPORT;
+		} else {
+			return profiler.doReport();
+		}
+	}
+
+	private Watch[] doReport() {
+		if (watchCounter == 0) {
+			return EMTPY_REPORT;
+		} else {
+			Watch[] watches = new Watch[watchCounter];
+			int counter = 0;
+			doReport(this.root, watches, counter);
+			return watches;
+		}
+	}
+
+	private void doReport(Watch watch, Watch[] watches, int counter) {
+		do {
+			watches[counter] = watch;
+			counter++;
+			if (watch.hasChilds()) {
+				doReport(watch.getFirstChild(), watches, counter);
+			}
+			watch = watch.getNext();
+		} while (watch != null);
 	}
 
 	public static String printReport() {
@@ -174,9 +214,9 @@ public class ThreadLocalProfiler {
 		long end = watch.getEndTimeMillis();
 		long fromStart = watch.getStartTimeMillis() - root.getStartTimeMillis();
 		long timeSpend = watch.getEndTimeMillis() - watch.getStartTimeMillis();
-		long toNext = watch.getTimeMillisToNext();
-		stringBuilder.append(String.format("%10d %10d %10d ", fromStart, timeSpend,
-				toNext));
+		long toNext = watch.getTimeToNextMillis();
+		stringBuilder.append(String.format("%10d %10d %10d ", fromStart,
+				timeSpend, toNext));
 		addPrefixes('-', level, stringBuilder);
 		boolean hasClassInfo = false;
 		if (watch.getClassName() != null && watch.getMethodName() != null) {

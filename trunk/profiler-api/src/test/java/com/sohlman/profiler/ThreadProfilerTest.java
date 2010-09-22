@@ -7,35 +7,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class ThreadProfilerTest {
-	
-	@Test
-	public void testSimple() throws Exception {
-		ThreadLocalProfiler.setup();
-		Watch watch = ThreadLocalProfiler.start();
-		Assert.assertTrue(watch.isRunning());
-		ThreadLocalProfiler.stop(watch, "/root");
-		Assert.assertFalse(watch.isRunning());
-		System.out.println(ThreadLocalProfiler.printReport());
-		ThreadLocalProfiler.tearDown();
-	}
-
-	@Test
-	public void watch() throws Exception {
-		ThreadLocalProfiler.setup();
-		Watch watch = ThreadLocalProfiler.start();
-		method(0, 1, 5);
-		ThreadLocalProfiler.stop(watch, "root");
-		System.out.println(ThreadLocalProfiler.printReport());
-		ThreadLocalProfiler.tearDown();
-	}
-
-	@Test
-	public void testRecursiveError1() throws Exception {
-		ThreadLocalProfiler.setup();
-		Watch watch = ThreadLocalProfiler.start();
-		System.out.println("hello");
-		Assert.assertTrue(watch.isRunning());
-	}
 
 	private void method(int level, int maxLevel, int loopCount) {
 		method(level, maxLevel, loopCount, -1, 0);
@@ -68,6 +39,48 @@ public class ThreadProfilerTest {
 			// Ignore
 		}
 	}
+	
+	@Test
+	public void testSimple() throws Exception {
+		ThreadLocalProfiler.setup();
+		Watch watch = ThreadLocalProfiler.start();
+		Assert.assertTrue(watch.isRunning());
+		ThreadLocalProfiler.stop(watch, "/root");
+		Assert.assertFalse(watch.isRunning());
+		System.out.println(ThreadLocalProfiler.printReport());
+		ThreadLocalProfiler.tearDown();
+	}
+
+	@Test
+	public void watch() throws Exception {
+		ThreadLocalProfiler.setup();
+		Watch watch = ThreadLocalProfiler.start();
+		method(0, 1, 5);
+		ThreadLocalProfiler.stop(watch, "root");
+		Watch[] watches = ThreadLocalProfiler.report();
+		
+		System.out.println(ToStringUtil.writeReport(watches, 10, "THRESHOLD","ROWINDENTIFIER"));
+		
+		long totalMillis = watches[0].getDurationInMillis();
+		long millisCounter=watches[0].getTimeToNextMillis();
+		
+		for(int i=1 ; i< watches.length ; i++) {
+			millisCounter =+ watches[i].getDurationInMillis();
+			millisCounter =+ watches[i].getDurationInMillis();
+		}
+		
+		Assert.assertEquals(totalMillis, totalMillis);
+		
+		ThreadLocalProfiler.tearDown();
+	}
+
+	@Test
+	public void testRecursiveError1() throws Exception {
+		ThreadLocalProfiler.setup();
+		Watch watch = ThreadLocalProfiler.start();
+		System.out.println("hello");
+		Assert.assertTrue(watch.isRunning());
+	}	
 
 	@After
 	public void tearDown() throws Exception {

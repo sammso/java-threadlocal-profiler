@@ -43,8 +43,8 @@ public class ProfilerFilter extends BasePortalFilter {
 
 				response, filterChain);
 			} finally {
-				ThreadLocalProfiler.stop(watch, request.getRequestURI() + "?"
-						+ request.getQueryString());
+				String query = request.getQueryString();
+				ThreadLocalProfiler.stop(watch, query==null?request.getRequestURI(): request.getRequestURI() + "?");
 				getLog().info(ThreadLocalProfiler.printReport());
 				ThreadLocalProfiler.tearDown();
 			}
