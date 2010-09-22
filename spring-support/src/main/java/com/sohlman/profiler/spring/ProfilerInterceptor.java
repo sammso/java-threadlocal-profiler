@@ -45,21 +45,16 @@ public class ProfilerInterceptor implements MethodInterceptor {
 
 	@Override
 	public Object invoke(MethodInvocation invocation) throws Throwable {
-		if (ThreadLocalProfiler.isSetupDone()) {
-			Method method = invocation.getMethod();
-			Class invocatedClass = getClass(method, invocation);
-			Watch watch = null;
-			try {
-				watch = ThreadLocalProfiler.start();
-				return invocation.proceed();
-
-			} finally {
-				ThreadLocalProfiler.stop(watch, invocatedClass, method);
-			}
-		} else {
+		Method method = invocation.getMethod();
+		Class invocatedClass = getClass(method, invocation);
+		Watch watch = null;
+		try {
+			watch = ThreadLocalProfiler.start();
 			return invocation.proceed();
-		}
 
+		} finally {
+			ThreadLocalProfiler.stop(watch, invocatedClass, method);
+		}
 	}
 
 }
