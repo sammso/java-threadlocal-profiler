@@ -26,7 +26,7 @@
 	</build>
 	<modules>
 		<module>profiler-api</module>
-		<module>spring-support</module>
-		<module>liferay-support</module>
+		<module>profiler-liferay</module>
+		<module>profiler-spring-support</module>
 	</modules>
 </project>
