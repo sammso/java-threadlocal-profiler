@@ -56,6 +56,7 @@ public class Watch {
 			lastChild.setNext(watch);
 			lastChild = watch;
 		}
+		watch.parent = this;
 	}
 
 	Watch getNext() {
