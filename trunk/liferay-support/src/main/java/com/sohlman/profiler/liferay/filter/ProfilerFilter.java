@@ -28,15 +28,15 @@ import com.sohlman.profiler.Watch;
 public class ProfilerFilter extends BasePortalFilter {
 	public final String SKIP_FILTER = getClass().getName() + "SKIP_FILTER";
 
-	private long alarmThresHoldMillis=5000;
-	
+	private long alarmThresHoldMillis = 5000;
+
 	private String thresholdReached = "THRESHOLD-REACHED";
 	private String rowIdentifier = "THREADLOCALPROFILER";
-	
-	
+
 	@Override
 	public void init(FilterConfig filterConfig) {
-		// Write here portal-ext property reader for threshold and row identifier
+		// Write here portal-ext property reader for threshold and row
+		// identifier
 	}
 
 	@Override
@@ -44,12 +44,14 @@ public class ProfilerFilter extends BasePortalFilter {
 			HttpServletResponse response, FilterChain filterChain)
 			throws Exception {
 		if (isAlreadyFiltered(request)) {
-			processFilter(ProfilerFilter.class, request,response, filterChain);
-			
+			processFilter(ProfilerFilter.class, request, response, filterChain);
+
 		} else {
+			ThreadLocalProfiler.setUp();
 			Watch watch = ThreadLocalProfiler.start();
 			try {
-				processFilter(ProfilerFilter.class, request,response, filterChain);
+				processFilter(ProfilerFilter.class, request, response,
+						filterChain);
 			} finally {
 				String query = request.getQueryString();
 				ThreadLocalProfiler.stop(
@@ -62,6 +64,9 @@ public class ProfilerFilter extends BasePortalFilter {
 								rowIdentifier));
 				ThreadLocalProfiler.tearDown();
 			}
+
+			processFilter(ProfilerFilter.class, request, response, filterChain);
+
 		}
 	}
 

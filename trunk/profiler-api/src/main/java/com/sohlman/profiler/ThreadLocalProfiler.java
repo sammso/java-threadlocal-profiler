@@ -49,10 +49,74 @@ public class ThreadLocalProfiler {
 	private int activeWatchCounter;
 	private int watchCounter;
 
+	private static volatile boolean isDisabled = false;
+	private static volatile boolean isSetupRequired = false;
+
 	private ThreadLocalProfiler() {
 		// Not allowed to create
 		activeWatchCounter = 0;
 		watchCounter = 0;
+	}
+
+	/**
+	 * To control start point of logging. if isSetupRequired is true (by default
+	 * false) then this method is required.
+	 */
+	public static void setUp() {
+		createThreadLocalProfiler(threadProfiler.get());
+	}
+	
+	private static ThreadLocalProfiler createThreadLocalProfiler(ThreadLocalProfiler profiler) {
+		if (!isRunning(profiler)) {
+			if (isDisabled) {
+				tearDown();
+				return null;
+			}
+			else {
+				profiler = new ThreadLocalProfiler();
+				threadProfiler.set(profiler);
+				return profiler;
+			}
+		}
+		else {
+			return profiler;
+		}
+	}
+
+	/**
+	 * Set setup required true or false <b>Note</b> this value is common for all
+	 * threads.
+	 */
+	public static void setSetupRequired(boolean value) {
+		isSetupRequired = value;
+	}
+
+	/**
+	 * Tells if ThreadLocalProfiler is disabled <b>Note</b> this value is common
+	 * for all threads.
+	 * 
+	 * @return boolean
+	 */
+	public static boolean isSetupRequired() {
+		return isSetupRequired;
+	}
+
+	/**
+	 * Disables or enables profiler <b>Note</b> this value is common for all
+	 * threads.
+	 */
+	public static void setDisabled(boolean value) {
+		isDisabled = value;
+	}
+
+	/**
+	 * Tells if ThreadLocalProfiler is disabled <b>Note</b> this value is common
+	 * for all threads.
+	 * 
+	 * @return boolean
+	 */
+	public static boolean isDisabled() {
+		return isDisabled;
 	}
 
 	/**
@@ -61,22 +125,50 @@ public class ThreadLocalProfiler {
 	 */
 	public static Watch start() {
 		ThreadLocalProfiler profiler = threadProfiler.get();
-		if (!isRunning(profiler)) {
-			profiler = new ThreadLocalProfiler();
-			threadProfiler.set(profiler);
+		if (isRunning(profiler)) {
+			return start(profiler);
 		}
-		return profiler.doStart();
+		else {
+			if(isSetupRequired()) {
+				if(profiler==null) {
+					return null;
+				}
+				else if(profiler.root==null) {
+					return start(profiler);
+				}
+				else {
+					return null;
+				}
+				
+			}
+			else {
+				return start(createThreadLocalProfiler(profiler));
+			}
+		}
+
+	}
+	
+	private static Watch start(ThreadLocalProfiler profiler) {
+		if (profiler != null) {
+			return profiler.doStart();
+		} else {
+			return null;
+		}		
 	}
 
 	private Watch doStart() {
 		Watch watch;
+		
 		if (current == null) {
 			watch = new Watch(null);
 			root = watch;
+			activeWatchCounter=0;
+			watchCounter=0;
 		} else {
 			watch = new Watch(current);
 			current.addChild(watch);
 		}
+		
 		activeWatchCounter++;
 		watchCounter++;
 		current = watch;
@@ -90,15 +182,13 @@ public class ThreadLocalProfiler {
 	private static boolean isRunning(ThreadLocalProfiler profiler) {
 		if (profiler == null) {
 			return false;
-		}
-		else if (profiler.getRoot() == null) {
+		} else if (profiler.getRoot() == null) {
 			return false;
 		} else {
-			return profiler.current!=null;
+			return profiler.current != null;
 		}
 	}
-	
-	
+
 	private void doStop(Watch watch, String className, String methodName,
 			String text) {
 		activeWatchCounter--;
@@ -175,14 +265,15 @@ public class ThreadLocalProfiler {
 		}
 	}
 
-	private void doReport(Watch watch, Watch[] watches, int counter) {
+	private int doReport(Watch watch, Watch[] watches, int counter) {
 		do {
 			watches[counter] = watch;
 			counter++;
 			if (watch.hasChilds()) {
-				doReport(watch.getFirstChild(), watches, counter);
+				counter = doReport(watch.getFirstChild(), watches, counter);
 			}
 			watch = watch.getNext();
 		} while (watch != null);
+		return counter;
 	}
 }

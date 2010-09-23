@@ -22,7 +22,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class ThreadProfilerTest {
-
+	
+	
+	
 	private void method(int level, int maxLevel, int loopCount) {
 		method(level, maxLevel, loopCount, -1, 0);
 	}
@@ -36,7 +38,7 @@ public class ThreadProfilerTest {
 			if (level < maxLevel) {
 				for (int i = 0; i < loopCount; i++) {
 					sleep(10);
-					method(level + 1, maxLevel, loopCount, -1, i);
+					method(level + 1, maxLevel, loopCount, noStopLevel, i);
 				}
 			}
 		} finally {
@@ -56,6 +58,14 @@ public class ThreadProfilerTest {
 	}
 	
 	@Test
+	public void testDefaults() {
+		// This test should be first. If the default values are
+		// changed then modify also teardown()
+		Assert.assertFalse(ThreadLocalProfiler.isSetupRequired());
+		Assert.assertFalse(ThreadLocalProfiler.isDisabled());
+	}
+	
+	@Test
 	public void testSimple() throws Exception {
 		Watch watch = ThreadLocalProfiler.start();
 		Assert.assertTrue(watch.isRunning());
@@ -71,9 +81,7 @@ public class ThreadProfilerTest {
 	
 	@Test
 	public void testRecursiveWithThreshold() throws Exception {
-		Watch watch = ThreadLocalProfiler.start();
-		method(0, 1, 5);
-		ThreadLocalProfiler.stop(watch, "root");
+		method(0, 2, 5);
 		Watch[] watches = ThreadLocalProfiler.report();
 		
 		String reportString = ToStringUtil.writeReport(watches, 10, THRESHOLD,ROWINDENTIFIER);
@@ -81,7 +89,7 @@ public class ThreadProfilerTest {
 		System.out.println(reportString);
 		
 		verifyTree(watches);
-		
+		Assert.assertEquals(31, watches.length);
 		Assert.assertTrue("Verify report threshold from text report", reportString.indexOf(THRESHOLD)>=0);
 		Assert.assertTrue("Verify report row identifier from text report",reportString.indexOf(ROWINDENTIFIER)>=0);
 		
@@ -90,9 +98,7 @@ public class ThreadProfilerTest {
 	
 	@Test
 	public void testRecursiveWithWithoutThreshold() throws Exception {
-		Watch watch = ThreadLocalProfiler.start();
 		method(0, 1, 5);
-		ThreadLocalProfiler.stop(watch, "root");
 		Watch[] watches = ThreadLocalProfiler.report();
 		
 		// use big threshold
@@ -101,6 +107,7 @@ public class ThreadProfilerTest {
 		System.out.println(reportString);
 		
 		verifyTree(watches);
+		Assert.assertEquals(6, watches.length);
 		
 		Assert.assertFalse("Verify report threshold from text report", reportString.indexOf(THRESHOLD)>=0);
 		Assert.assertTrue("Verify report row identifier from text report",reportString.indexOf(ROWINDENTIFIER)>=0);
@@ -152,5 +159,86 @@ public class ThreadProfilerTest {
 		ThreadLocalProfiler.stop(w4, "w4");
 		
 		Assert.assertEquals(2,ThreadLocalProfiler.report().length);		
+	}
+	
+	@Test 
+	public void testDisabled() {
+		ThreadLocalProfiler.setDisabled(true);
+		Assert.assertNull(ThreadLocalProfiler.start());
+		ThreadLocalProfiler.setDisabled(false);
+		Assert.assertNotNull(ThreadLocalProfiler.start());
+	}
+	
+	@Test 
+	public void testSetupRequiredTrue_Start_Setup_Start() {
+		ThreadLocalProfiler.setSetupRequired(true);
+		Assert.assertNull(ThreadLocalProfiler.start());
+		ThreadLocalProfiler.setUp();
+		Assert.assertNotNull(ThreadLocalProfiler.start());
+	}	
+	
+	@Test 
+	public void testSetupFalse_Start_SetupTrue_Stop() {
+		ThreadLocalProfiler.setSetupRequired(false);
+		Watch watch = ThreadLocalProfiler.start();
+		ThreadLocalProfiler.setSetupRequired(true);
+		ThreadLocalProfiler.stop(watch,"");
+		Assert.assertEquals(1, ThreadLocalProfiler.report().length);
+		Assert.assertNull(ThreadLocalProfiler.start());
+	}		
+	
+	@Test 
+	public void testSetupTrue_Start_SetupFalse_Stop_Start_Stop() {
+		ThreadLocalProfiler.setSetupRequired(true);
+		ThreadLocalProfiler.setUp();
+		Watch watch = ThreadLocalProfiler.start();
+		Assert.assertNotNull(watch);
+		ThreadLocalProfiler.setSetupRequired(false);
+		ThreadLocalProfiler.stop(watch,"");
+		Assert.assertEquals(1, ThreadLocalProfiler.report().length);
+		
+		watch = ThreadLocalProfiler.start();
+		Assert.assertNotNull(watch);
+		ThreadLocalProfiler.setSetupRequired(false);
+		ThreadLocalProfiler.stop(watch,"");
+		Assert.assertEquals(1, ThreadLocalProfiler.report().length);
+	}
+	
+	@Test 
+	public void testSetupTrue_Start_SetupFalse_Stop_Setup_Start_Stop() {
+		ThreadLocalProfiler.setSetupRequired(true);
+		ThreadLocalProfiler.setUp();
+		Watch watch = ThreadLocalProfiler.start();
+		Assert.assertNotNull(watch);
+		ThreadLocalProfiler.setSetupRequired(false);
+		ThreadLocalProfiler.stop(watch,"");
+		Assert.assertEquals(1, ThreadLocalProfiler.report().length);
+		ThreadLocalProfiler.setUp();
+		watch = ThreadLocalProfiler.start();
+		Assert.assertNotNull(watch);
+		ThreadLocalProfiler.setSetupRequired(false);
+		ThreadLocalProfiler.stop(watch,"");
+		Assert.assertEquals(1, ThreadLocalProfiler.report().length);
+	}	
+	
+	@Test 
+	public void testSetupTrue_Start_Disabled_Stop_Setup_Start() {
+		ThreadLocalProfiler.setSetupRequired(true);
+		ThreadLocalProfiler.setUp();
+		Watch watch = ThreadLocalProfiler.start();
+		Assert.assertNotNull(watch);
+		ThreadLocalProfiler.setDisabled(true);
+		ThreadLocalProfiler.stop(watch,"");
+		Assert.assertEquals(1, ThreadLocalProfiler.report().length);
+		
+		watch = ThreadLocalProfiler.start();
+		Assert.assertNull(watch);
+	}	
+	
+	@After 
+	public void teardDown() {
+		ThreadLocalProfiler.tearDown();
+		ThreadLocalProfiler.setSetupRequired(false);
+		ThreadLocalProfiler.setDisabled(false);
 	}
 }
