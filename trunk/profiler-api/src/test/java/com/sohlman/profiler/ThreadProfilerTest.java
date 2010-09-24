@@ -235,6 +235,56 @@ public class ThreadProfilerTest {
 		Assert.assertNull(watch);
 	}	
 	
+	@Test 
+	public void testTestDisabledDuringRunning() {
+		ThreadLocalProfiler.setSetupRequired(false);
+		
+		Watch w1 = ThreadLocalProfiler.start();
+		Assert.assertNotNull(w1);
+		Watch w2 = ThreadLocalProfiler.start();
+		Assert.assertNotNull(w2);
+		Watch w3 = ThreadLocalProfiler.start();
+		Assert.assertNotNull(w3);		
+		ThreadLocalProfiler.stop(w3,"");
+		ThreadLocalProfiler.setDisabled(true);
+		Watch w4 = ThreadLocalProfiler.start();
+		Assert.assertNotNull(w4);		
+		ThreadLocalProfiler.stop(w4,"");		
+		ThreadLocalProfiler.stop(w2,"");
+		ThreadLocalProfiler.stop(w1,"");
+		Assert.assertEquals(4, ThreadLocalProfiler.report().length);
+
+		//
+		Assert.assertNull(ThreadLocalProfiler.start());
+		ThreadLocalProfiler.setDisabled(false);
+		Assert.assertNotNull(ThreadLocalProfiler.start());
+	}		
+	
+	@Test 
+	public void testTestSetUpRequiedDuringRunning() {
+		ThreadLocalProfiler.setSetupRequired(false);
+		
+		Watch w1 = ThreadLocalProfiler.start();
+		Assert.assertNotNull(w1);
+		Watch w2 = ThreadLocalProfiler.start();
+		Assert.assertNotNull(w2);
+		Watch w3 = ThreadLocalProfiler.start();
+		Assert.assertNotNull(w3);		
+		ThreadLocalProfiler.stop(w3,"");
+		ThreadLocalProfiler.setSetupRequired(true);
+		Watch w4 = ThreadLocalProfiler.start();
+		Assert.assertNotNull(w4);		
+		ThreadLocalProfiler.stop(w4,"");		
+		ThreadLocalProfiler.stop(w2,"");
+		ThreadLocalProfiler.stop(w1,"");
+		Assert.assertEquals(4, ThreadLocalProfiler.report().length);
+
+		//
+		Assert.assertNull(ThreadLocalProfiler.start());
+		ThreadLocalProfiler.setUp();
+		Assert.assertNotNull(ThreadLocalProfiler.start());
+	}	
+	
 	@After 
 	public void teardDown() {
 		ThreadLocalProfiler.tearDown();
