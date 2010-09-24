@@ -3,11 +3,11 @@
   <parent>
     <artifactId>profiler</artifactId>
     <groupId>com.sohlman.profiler</groupId>
-    <version>0.0.2</version>
+    <version>0.1.0-SNAPSHOT</version>
   </parent>
   <groupId>com.sohlman.profiler</groupId>
   <artifactId>profiler-spring-support</artifactId>
-  <version>0.0.2</version>
+  <version>0.1.0-SNAPSHOT</version>
   <name>ThreadLocalProfiler Spring support</name>
   <description>Spring support for thread local profiler</description>
   <url>http://code.google.com/p/java-threadlocal-profiler/</url>
@@ -26,7 +26,7 @@
   	<dependency>
 		<groupId>com.sohlman.profiler</groupId>
 		<artifactId>profiler-api</artifactId>
-		<version>0.0.2</version>
+		<version>0.1.0-SNAPSHOT</version>
   	</dependency>
   </dependencies>
   <reporting>
