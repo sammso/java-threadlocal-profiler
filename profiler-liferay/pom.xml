@@ -3,11 +3,11 @@
   <parent>
     <artifactId>profiler</artifactId>
     <groupId>com.sohlman.profiler</groupId>
-    <version>0.0.2-SNAPSHOT</version>
+    <version>0.0.2</version>
   </parent>
   <groupId>com.sohlman.profiler</groupId>
   <artifactId>profiler-liferay</artifactId>
-  <version>0.0.2-SNAPSHOT</version>
+  <version>0.0.2</version>
   <name>ThreadLocalProfiler Liferay Filter</name>
   <description>Liferay servlet filter for ThreadLocalProfiler.</description>
   <url>http://code.google.com/p/java-threadlocal-profiler/</url>
@@ -40,7 +40,7 @@
   	<dependency>
 		<groupId>com.sohlman.profiler</groupId>
 		<artifactId>profiler-api</artifactId>
-		<version>0.0.2-SNAPSHOT</version>
+		<version>0.0.2</version>
   	</dependency>  	
   </dependencies>
 
