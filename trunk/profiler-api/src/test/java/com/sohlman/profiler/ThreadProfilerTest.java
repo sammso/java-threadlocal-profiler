@@ -116,15 +116,19 @@ public class ThreadProfilerTest {
 	}	
 
 	private void verifyTree(Watch[] watches) throws Exception {
+		long lastStart = watches[0].getStartTimeMillis();
+		long lastElapsed = watches[0].getElapsedInMillis();
+		long lastToNextMillis = watches[0].getTimeToNextMillis();
 		long totalMillis = watches[0].getElapsedInMillis();
 		long millisCounter=watches[0].getTimeToNextMillis();
 		
 		for(int i=1 ; i< watches.length ; i++) {
 			millisCounter =+ watches[i].getElapsedInMillis();
-			millisCounter =+ watches[i].getElapsedInMillis();
+			millisCounter =+ watches[i].getElapsedInMillis();			
+			
 		}
 		
-		Assert.assertEquals(totalMillis, totalMillis);		
+		Assert.assertEquals(totalMillis, totalMillis);
 	}
 	
 	@Test
@@ -140,6 +144,49 @@ public class ThreadProfilerTest {
 		
 		Assert.assertEquals(w1.getEndTimeMillis(), w2.getEndTimeMillis());
 		Assert.assertNotSame(w1.getEndTimeMillis(), w3.getEndTimeMillis());
+		Assert.assertNotNull(ThreadLocalProfiler.report());
+	}	
+	
+	@Test
+	public void testVariations1() throws Exception {
+		Watch w1 = ThreadLocalProfiler.start();
+		sleep(1);
+		Watch w2 = ThreadLocalProfiler.start();
+		sleep(1);
+		Watch w3 = ThreadLocalProfiler.start();
+		sleep(1);
+		ThreadLocalProfiler.stop(w3, "w3");	
+		ThreadLocalProfiler.stop(w2, "w2");
+		Watch w4 = ThreadLocalProfiler.start();
+		ThreadLocalProfiler.stop(w4, "w4");
+		ThreadLocalProfiler.stop(w1, "w1");
+		
+		Assert.assertEquals(w1.getEndTimeMillis(), w2.getEndTimeMillis());
+		Assert.assertNotSame(w1.getEndTimeMillis(), w3.getEndTimeMillis());
+		Assert.assertEquals(4, ThreadLocalProfiler.report().length);
+	}
+	
+	@Test
+	public void testVariations2() throws Exception {
+		Watch w1 = ThreadLocalProfiler.start();
+		sleep(1);
+		Watch w2 = ThreadLocalProfiler.start();
+		sleep(1);
+		Watch w3 = ThreadLocalProfiler.start();
+		sleep(1);
+		ThreadLocalProfiler.stop(w3, "w3");	
+		ThreadLocalProfiler.stop(w2, "w2");
+		Watch w4 = ThreadLocalProfiler.start();
+		ThreadLocalProfiler.stop(w4, "w4");
+		Watch w5 = ThreadLocalProfiler.start();
+		Watch w6 = ThreadLocalProfiler.start();
+		ThreadLocalProfiler.stop(w4, "w6");			
+		ThreadLocalProfiler.stop(w4, "w5");		
+		ThreadLocalProfiler.stop(w1, "w1");
+		
+		Assert.assertEquals(w1.getEndTimeMillis(), w2.getEndTimeMillis());
+		Assert.assertNotSame(w1.getEndTimeMillis(), w3.getEndTimeMillis());
+		Assert.assertEquals(6, ThreadLocalProfiler.report().length);
 	}	
 	
 	@Test
