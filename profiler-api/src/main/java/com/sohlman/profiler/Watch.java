@@ -87,7 +87,7 @@ public class Watch {
 	}
 
 	private long getMillisFromParent(Watch watch) {
-		if (watch.getNext() != null) {
+		if (getParent()!=null && getParent().getNext()!=null) {
 			return getParent().getNext().getStartTimeMillis()
 					- getStartTimeMillis();
 		} else if (watch.getParent() != null) {
