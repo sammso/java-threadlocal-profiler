@@ -76,24 +76,28 @@ public class Watch {
 	}
 
 	public long getTimeToNextMillis() {
-		if (getFirstChild() != null)
+		if (getFirstChild() != null) {
 			return getFirstChild().getStartTimeMillis() - getStartTimeMillis();
-		if (getNext() != null)
-			return getNext().getStartTimeMillis() - getEndTimeMillis();
-		if (getParent() != null) {
-			return getMillisFromParent(getParent());
 		}
-		return 0;
+		else if (getNext() != null) {
+			return getNext().getStartTimeMillis() - getEndTimeMillis();
+		} 
+		else {
+			return getMillisFromParent(getParent(), this);
+		}
 	}
 
-	private long getMillisFromParent(Watch watch) {
-		if (getParent()!=null && getParent().getNext()!=null) {
-			return getParent().getNext().getStartTimeMillis()
-					- getStartTimeMillis();
-		} else if (watch.getParent() != null) {
-			return getMillisFromParent(watch.getParent());
+	private static long getMillisFromParent(Watch parent, Watch current) {
+		// This is recursive
+		if(parent==null ) {
+			return 0;
+		} if (parent.getNext()!=null) {
+			return parent.getNext().getStartTimeMillis()
+					- current.getStartTimeMillis();
+		} else if (parent.getParent() != null) {
+			return getMillisFromParent(parent.getParent(), current);
 		} else {
-			return watch.getEndTimeMillis() - getEndTimeMillis();
+			return parent.getEndTimeMillis() - current.getEndTimeMillis();
 		}
 	}
 
