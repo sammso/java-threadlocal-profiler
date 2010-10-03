@@ -20,6 +20,9 @@ import javax.servlet.FilterConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.servlet.filters.BasePortalFilter;
 import com.sohlman.profiler.ThreadLocalProfiler;
 import com.sohlman.profiler.ToStringUtil;
@@ -28,15 +31,29 @@ import com.sohlman.profiler.Watch;
 public class ProfilerFilter extends BasePortalFilter {
 	public final String SKIP_FILTER = getClass().getName() + "SKIP_FILTER";
 
-	private long alarmThresHoldMillis = 5000;
-
-	private String thresholdReached = "THRESHOLD-REACHED";
-	private String rowIdentifier = "THREADLOCALPROFILER";
+	private long thresHoldMillis;
+	private String thresholdReached;
+	private String rowIdentifier;
+	
+	private final String PROFILE_THRESHOLDMILLIS 				= "threadlocalprofiler.thresholdmillis";
+	private final String PROFILE_ROWIDENTIFIER 					= "threadlocalprofiler.rowidentfier";
+	private final String PROFILE_THRESHOLDREACHED_IDENTIFIER 	= "threadlocalprofiler.thresholdreached.rowidentfier";
+	private final String PROFILE_DISABLED					 	= "threadlocalprofiler.disabled";
+	
 
 	@Override
 	public void init(FilterConfig filterConfig) {
-		// Write here portal-ext property reader for threshold and row
-		// identifier
+		try {
+			thresHoldMillis = GetterUtil.get(PrefsPropsUtil.getString(PROFILE_THRESHOLDMILLIS), 5000);
+			rowIdentifier = GetterUtil.get(PrefsPropsUtil.getString(PROFILE_ROWIDENTIFIER), "THREADLOCALPROFILER");
+			thresholdReached = GetterUtil.get(PrefsPropsUtil.getString(PROFILE_THRESHOLDREACHED_IDENTIFIER), "THRESHOLD-REACHED");
+			ThreadLocalProfiler.setDisabled(GetterUtil.get(PrefsPropsUtil.getString(PROFILE_DISABLED), true));
+			
+		} catch (Exception exception) {
+			getLog().error("Problem while reading properties",exception);
+		}
+		
+		
 	}
 
 	@Override
@@ -53,20 +70,34 @@ public class ProfilerFilter extends BasePortalFilter {
 				processFilter(ProfilerFilter.class, request, response,
 						filterChain);
 			} finally {
+				Log log = getLog();
 				String query = request.getQueryString();
 				ThreadLocalProfiler.stop(
 						watch,
 						query == null ? request.getRequestURI() : request
 								.getRequestURI() + "?" + query);
-				getLog().info(
-						ToStringUtil.writeReport(ThreadLocalProfiler.report(),
-								alarmThresHoldMillis, thresholdReached,
-								rowIdentifier));
+				Watch[] watches = ThreadLocalProfiler.report();
+				if(isThresholdAchieved(thresHoldMillis, watches) && log.isWarnEnabled()) {
+					log.warn(ToStringUtil.writeReport(ThreadLocalProfiler.report(),
+							thresHoldMillis, thresholdReached,
+							rowIdentifier));
+				}
+				else if(log.isInfoEnabled()){
+					log.info(ToStringUtil.writeReport(ThreadLocalProfiler.report(),
+							thresHoldMillis, thresholdReached,
+							rowIdentifier));	
+				}
 				ThreadLocalProfiler.tearDown();
 			}
-
-			processFilter(ProfilerFilter.class, request, response, filterChain);
-
+		}
+	}
+	
+	private boolean isThresholdAchieved(long thresholdMillis, Watch[] watches) {
+		if(watches==null && watches.length <= 0) {
+			return false;
+		}
+		else {
+			return watches[0].getElapsedInMillis() > thresholdMillis;
 		}
 	}
 
