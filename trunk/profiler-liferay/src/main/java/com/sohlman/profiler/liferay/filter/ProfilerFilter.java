@@ -34,6 +34,7 @@ public class ProfilerFilter extends BasePortalFilter {
 	private long thresHoldMillis;
 	private String thresholdReached;
 	private String rowIdentifier;
+	private String lineSeparator;
 	
 	private final String PROFILE_THRESHOLDMILLIS 				= "threadlocalprofiler.thresholdmillis";
 	private final String PROFILE_ROWIDENTIFIER 					= "threadlocalprofiler.rowidentfier";
@@ -43,24 +44,24 @@ public class ProfilerFilter extends BasePortalFilter {
 
 	@Override
 	public void init(FilterConfig filterConfig) {
+		super.init(filterConfig);
 		try {
 			thresHoldMillis = GetterUtil.get(PrefsPropsUtil.getString(PROFILE_THRESHOLDMILLIS), 5000);
 			rowIdentifier = GetterUtil.get(PrefsPropsUtil.getString(PROFILE_ROWIDENTIFIER), "THREADLOCALPROFILER");
 			thresholdReached = GetterUtil.get(PrefsPropsUtil.getString(PROFILE_THRESHOLDREACHED_IDENTIFIER), "THRESHOLD-REACHED");
 			ThreadLocalProfiler.setDisabled(GetterUtil.get(PrefsPropsUtil.getString(PROFILE_DISABLED), true));
-			
+			String lineSeparator = System.getProperty("line.separator");
 		} catch (Exception exception) {
 			getLog().error("Problem while reading properties",exception);
 		}
-		
-		
 	}
 
 	@Override
 	protected void processFilter(HttpServletRequest request,
 			HttpServletResponse response, FilterChain filterChain)
 			throws Exception {
-		if (isAlreadyFiltered(request)) {
+		if (isAlreadyFiltered(request) || 
+				ThreadLocalProfiler.isDisabled()) {
 			processFilter(ProfilerFilter.class, request, response, filterChain);
 
 		} else {
@@ -78,14 +79,14 @@ public class ProfilerFilter extends BasePortalFilter {
 								.getRequestURI() + "?" + query);
 				Watch[] watches = ThreadLocalProfiler.report();
 				if(isThresholdAchieved(thresHoldMillis, watches) && log.isWarnEnabled()) {
-					log.warn(ToStringUtil.writeReport(ThreadLocalProfiler.report(),
+					log.warn(ToStringUtil.writeReport(watches,
 							thresHoldMillis, thresholdReached,
-							rowIdentifier));
+							rowIdentifier, lineSeparator));
 				}
 				else if(log.isInfoEnabled()){
-					log.info(ToStringUtil.writeReport(ThreadLocalProfiler.report(),
+					log.info(ToStringUtil.writeReport(watches,
 							thresHoldMillis, thresholdReached,
-							rowIdentifier));	
+							rowIdentifier, lineSeparator));	
 				}
 				ThreadLocalProfiler.tearDown();
 			}
@@ -93,7 +94,7 @@ public class ProfilerFilter extends BasePortalFilter {
 	}
 	
 	private boolean isThresholdAchieved(long thresholdMillis, Watch[] watches) {
-		if(watches==null && watches.length <= 0) {
+		if(watches==null || watches.length <= 0) {
 			return false;
 		}
 		else {
