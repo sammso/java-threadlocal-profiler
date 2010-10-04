@@ -50,7 +50,7 @@ public class ProfilerFilter extends BasePortalFilter {
 			rowIdentifier = GetterUtil.get(PrefsPropsUtil.getString(PROFILE_ROWIDENTIFIER), "THREADLOCALPROFILER");
 			thresholdReached = GetterUtil.get(PrefsPropsUtil.getString(PROFILE_THRESHOLDREACHED_IDENTIFIER), "THRESHOLD-REACHED");
 			ThreadLocalProfiler.setDisabled(GetterUtil.get(PrefsPropsUtil.getString(PROFILE_DISABLED), true));
-			String lineSeparator = System.getProperty("line.separator");
+			lineSeparator = System.getProperty("line.separator");
 		} catch (Exception exception) {
 			getLog().error("Problem while reading properties",exception);
 		}
