@@ -84,7 +84,7 @@ public class ThreadProfilerTest {
 		method(0, 2, 5);
 		Watch[] watches = ThreadLocalProfiler.report();
 		
-		String reportString = ToStringUtil.writeReport(watches, 10, THRESHOLD,ROWINDENTIFIER);
+		String reportString = ToStringUtil.writeReport(watches, 10, THRESHOLD,ROWINDENTIFIER,"\n");
 		
 		System.out.println(reportString);
 		
@@ -102,7 +102,7 @@ public class ThreadProfilerTest {
 		Watch[] watches = ThreadLocalProfiler.report();
 		
 		// use big threshold
-		String reportString = ToStringUtil.writeReport(watches, 10000, THRESHOLD,ROWINDENTIFIER);
+		String reportString = ToStringUtil.writeReport(watches, 10000, THRESHOLD,ROWINDENTIFIER,"\n");
 		
 		System.out.println(reportString);
 		
