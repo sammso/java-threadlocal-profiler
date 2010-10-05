@@ -3,11 +3,11 @@
   <parent>
     <artifactId>profiler</artifactId>
     <groupId>com.sohlman.profiler</groupId>
-    <version>0.1.0</version>
+    <version>0.2.0-SNAPSHOT</version>
   </parent>
   <groupId>com.sohlman.profiler</groupId>
   <artifactId>profiler-api</artifactId>
-  <version>0.1.0</version>
+  <version>0.2.0-SNAPSHOT</version>
   <name>ThreadLocalProfiler API</name>
   <description>Main API module for ThreadLocalProfiler. Tree like simple profiling for java.</description>
   <url>http://code.google.com/p/java-threadlocal-profiler/</url>
