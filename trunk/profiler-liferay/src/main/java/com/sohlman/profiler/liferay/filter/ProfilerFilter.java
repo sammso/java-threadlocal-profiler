@@ -83,8 +83,8 @@ public class ProfilerFilter extends BasePortalFilter {
 							thresHoldMillis, thresholdReached,
 							rowIdentifier, lineSeparator));
 				}
-				else if(log.isInfoEnabled()){
-					log.info(ToStringUtil.writeReport(watches,
+				else if(log.isDebugEnabled()){
+					log.debug(ToStringUtil.writeReport(watches,
 							thresHoldMillis, thresholdReached,
 							rowIdentifier, lineSeparator));	
 				}
