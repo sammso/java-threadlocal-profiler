@@ -23,7 +23,13 @@ import org.junit.Test;
 
 public class ThreadProfilerTest {
 	
+	private HelperReporter testReporter;
 	
+	@Before
+	public void setUpTest() {
+		testReporter = new HelperReporter();
+		ThreadLocalProfiler.setReporter(testReporter);
+	}
 	
 	private void method(int level, int maxLevel, int loopCount) {
 		method(level, maxLevel, loopCount, -1, 0);
@@ -61,7 +67,6 @@ public class ThreadProfilerTest {
 	public void testDefaults() {
 		// This test should be first. If the default values are
 		// changed then modify also teardown()
-		Assert.assertFalse(ThreadLocalProfiler.isSetupRequired());
 		Assert.assertFalse(ThreadLocalProfiler.isDisabled());
 	}
 	
@@ -71,9 +76,8 @@ public class ThreadProfilerTest {
 		Assert.assertTrue(watch.isRunning());
 		ThreadLocalProfiler.stop(watch, "/root");
 		Assert.assertFalse(watch.isRunning());
-		Watch[] watches = ThreadLocalProfiler.report();
+		Watch[] watches = testReporter.getWatches();
 		Assert.assertEquals(1, watches.length);
-		ThreadLocalProfiler.tearDown();
 	}
 	
 	private String THRESHOLD = "THRESHOLD";
@@ -82,7 +86,7 @@ public class ThreadProfilerTest {
 	@Test
 	public void testRecursiveWithThreshold() throws Exception {
 		method(0, 2, 5);
-		Watch[] watches = ThreadLocalProfiler.report();
+		Watch[] watches = testReporter.getWatches();
 		
 		String reportString = ToStringUtil.writeReport(watches, 10, THRESHOLD,ROWINDENTIFIER,"\n");
 		
@@ -93,13 +97,12 @@ public class ThreadProfilerTest {
 		Assert.assertTrue("Verify report threshold from text report", reportString.indexOf(THRESHOLD)>=0);
 		Assert.assertTrue("Verify report row identifier from text report",reportString.indexOf(ROWINDENTIFIER)>=0);
 		
-		ThreadLocalProfiler.tearDown();
 	}
 	
 	@Test
 	public void testRecursiveWithWithoutThreshold() throws Exception {
 		method(0, 1, 5);
-		Watch[] watches = ThreadLocalProfiler.report();
+		Watch[] watches = testReporter.getWatches();
 		
 		// use big threshold
 		String reportString = ToStringUtil.writeReport(watches, 10000, THRESHOLD,ROWINDENTIFIER,"\n");
@@ -111,8 +114,6 @@ public class ThreadProfilerTest {
 		
 		Assert.assertFalse("Verify report threshold from text report", reportString.indexOf(THRESHOLD)>=0);
 		Assert.assertTrue("Verify report row identifier from text report",reportString.indexOf(ROWINDENTIFIER)>=0);
-		
-		ThreadLocalProfiler.tearDown();
 	}	
 
 	private void verifyTree(Watch[] watches) throws Exception {
@@ -144,7 +145,8 @@ public class ThreadProfilerTest {
 		
 		Assert.assertEquals(w1.getEndTimeMillis(), w2.getEndTimeMillis());
 		Assert.assertNotSame(w1.getEndTimeMillis(), w3.getEndTimeMillis());
-		Assert.assertNotNull(ThreadLocalProfiler.report());
+		Watch[] watches = testReporter.getWatches();
+		Assert.assertNotNull(watches);
 	}	
 	
 	@Test
@@ -163,7 +165,8 @@ public class ThreadProfilerTest {
 		
 		Assert.assertEquals(w1.getEndTimeMillis(), w2.getEndTimeMillis());
 		Assert.assertNotSame(w1.getEndTimeMillis(), w3.getEndTimeMillis());
-		Assert.assertEquals(4, ThreadLocalProfiler.report().length);
+		Watch[] watches = testReporter.getWatches();
+		Assert.assertEquals(4, watches.length);
 	}
 	
 	@Test
@@ -186,7 +189,8 @@ public class ThreadProfilerTest {
 		
 		Assert.assertEquals(w1.getEndTimeMillis(), w2.getEndTimeMillis());
 		Assert.assertNotSame(w1.getEndTimeMillis(), w3.getEndTimeMillis());
-		Assert.assertEquals(6, ThreadLocalProfiler.report().length);
+		Watch[] watches = testReporter.getWatches();
+		Assert.assertEquals(6, watches.length);
 	}	
 	
 	@Test
@@ -204,8 +208,8 @@ public class ThreadProfilerTest {
 		sleep(1);
 		ThreadLocalProfiler.stop(w3, "w3");		
 		ThreadLocalProfiler.stop(w4, "w4");
-		
-		Assert.assertEquals(2,ThreadLocalProfiler.report().length);		
+		Watch[] watches = testReporter.getWatches();
+		Assert.assertEquals(2,watches.length);		
 	}
 	
 	@Test 
@@ -214,128 +218,12 @@ public class ThreadProfilerTest {
 		Assert.assertNull(ThreadLocalProfiler.start());
 		ThreadLocalProfiler.setDisabled(false);
 		Assert.assertNotNull(ThreadLocalProfiler.start());
-	}
-	
-	@Test 
-	public void testSetupRequiredTrue_Start_Setup_Start() {
-		ThreadLocalProfiler.setSetupRequired(true);
-		Assert.assertNull(ThreadLocalProfiler.start());
-		ThreadLocalProfiler.setUp();
-		Assert.assertNotNull(ThreadLocalProfiler.start());
-	}	
-	
-	@Test 
-	public void testSetupFalse_Start_SetupTrue_Stop() {
-		ThreadLocalProfiler.setSetupRequired(false);
-		Watch watch = ThreadLocalProfiler.start();
-		ThreadLocalProfiler.setSetupRequired(true);
-		ThreadLocalProfiler.stop(watch,"");
-		Assert.assertEquals(1, ThreadLocalProfiler.report().length);
-		Assert.assertNull(ThreadLocalProfiler.start());
 	}		
 	
-	@Test 
-	public void testSetupTrue_Start_SetupFalse_Stop_Start_Stop() {
-		ThreadLocalProfiler.setSetupRequired(true);
-		ThreadLocalProfiler.setUp();
-		Watch watch = ThreadLocalProfiler.start();
-		Assert.assertNotNull(watch);
-		ThreadLocalProfiler.setSetupRequired(false);
-		ThreadLocalProfiler.stop(watch,"");
-		Assert.assertEquals(1, ThreadLocalProfiler.report().length);
-		
-		watch = ThreadLocalProfiler.start();
-		Assert.assertNotNull(watch);
-		ThreadLocalProfiler.setSetupRequired(false);
-		ThreadLocalProfiler.stop(watch,"");
-		Assert.assertEquals(1, ThreadLocalProfiler.report().length);
-	}
-	
-	@Test 
-	public void testSetupTrue_Start_SetupFalse_Stop_Setup_Start_Stop() {
-		ThreadLocalProfiler.setSetupRequired(true);
-		ThreadLocalProfiler.setUp();
-		Watch watch = ThreadLocalProfiler.start();
-		Assert.assertNotNull(watch);
-		ThreadLocalProfiler.setSetupRequired(false);
-		ThreadLocalProfiler.stop(watch,"");
-		Assert.assertEquals(1, ThreadLocalProfiler.report().length);
-		ThreadLocalProfiler.setUp();
-		watch = ThreadLocalProfiler.start();
-		Assert.assertNotNull(watch);
-		ThreadLocalProfiler.setSetupRequired(false);
-		ThreadLocalProfiler.stop(watch,"");
-		Assert.assertEquals(1, ThreadLocalProfiler.report().length);
-	}	
-	
-	@Test 
-	public void testSetupTrue_Start_Disabled_Stop_Setup_Start() {
-		ThreadLocalProfiler.setSetupRequired(true);
-		ThreadLocalProfiler.setUp();
-		Watch watch = ThreadLocalProfiler.start();
-		Assert.assertNotNull(watch);
-		ThreadLocalProfiler.setDisabled(true);
-		ThreadLocalProfiler.stop(watch,"");
-		Assert.assertEquals(1, ThreadLocalProfiler.report().length);
-		
-		watch = ThreadLocalProfiler.start();
-		Assert.assertNull(watch);
-	}	
-	
-	@Test 
-	public void testTestDisabledDuringRunning() {
-		ThreadLocalProfiler.setSetupRequired(false);
-		
-		Watch w1 = ThreadLocalProfiler.start();
-		Assert.assertNotNull(w1);
-		Watch w2 = ThreadLocalProfiler.start();
-		Assert.assertNotNull(w2);
-		Watch w3 = ThreadLocalProfiler.start();
-		Assert.assertNotNull(w3);		
-		ThreadLocalProfiler.stop(w3,"");
-		ThreadLocalProfiler.setDisabled(true);
-		Watch w4 = ThreadLocalProfiler.start();
-		Assert.assertNotNull(w4);		
-		ThreadLocalProfiler.stop(w4,"");		
-		ThreadLocalProfiler.stop(w2,"");
-		ThreadLocalProfiler.stop(w1,"");
-		Assert.assertEquals(4, ThreadLocalProfiler.report().length);
-
-		//
-		Assert.assertNull(ThreadLocalProfiler.start());
-		ThreadLocalProfiler.setDisabled(false);
-		Assert.assertNotNull(ThreadLocalProfiler.start());
-	}		
-	
-	@Test 
-	public void testTestSetUpRequiedDuringRunning() {
-		ThreadLocalProfiler.setSetupRequired(false);
-		
-		Watch w1 = ThreadLocalProfiler.start();
-		Assert.assertNotNull(w1);
-		Watch w2 = ThreadLocalProfiler.start();
-		Assert.assertNotNull(w2);
-		Watch w3 = ThreadLocalProfiler.start();
-		Assert.assertNotNull(w3);		
-		ThreadLocalProfiler.stop(w3,"");
-		ThreadLocalProfiler.setSetupRequired(true);
-		Watch w4 = ThreadLocalProfiler.start();
-		Assert.assertNotNull(w4);		
-		ThreadLocalProfiler.stop(w4,"");		
-		ThreadLocalProfiler.stop(w2,"");
-		ThreadLocalProfiler.stop(w1,"");
-		Assert.assertEquals(4, ThreadLocalProfiler.report().length);
-
-		//
-		Assert.assertNull(ThreadLocalProfiler.start());
-		ThreadLocalProfiler.setUp();
-		Assert.assertNotNull(ThreadLocalProfiler.start());
-	}	
 	
 	@After 
 	public void teardDown() {
-		ThreadLocalProfiler.tearDown();
-		ThreadLocalProfiler.setSetupRequired(false);
 		ThreadLocalProfiler.setDisabled(false);
+		ThreadLocalProfiler.setReporter(null);
 	}
 }
