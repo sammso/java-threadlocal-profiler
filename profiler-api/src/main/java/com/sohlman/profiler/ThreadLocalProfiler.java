@@ -15,8 +15,12 @@
  */
 package com.sohlman.profiler;
 
+import java.io.ObjectInputStream.GetField;
 import java.lang.reflect.Method;
 import java.util.Formatter;
+import java.util.concurrent.atomic.AtomicReference;
+
+import com.sohlman.profiler.reporter.Reporter;
 
 /**
  * Thread local profiler is little library for profiling measuring performance
@@ -50,8 +54,9 @@ public class ThreadLocalProfiler {
 	private int watchCounter;
 
 	private static volatile boolean isDisabled = false;
-	private static volatile boolean isSetupRequired = false;
-
+	
+	private static AtomicReference<Reporter> reporterAtomicReference = new AtomicReference<Reporter>();
+	
 	private ThreadLocalProfiler() {
 		// Not allowed to create
 		activeWatchCounter = 0;
@@ -66,10 +71,18 @@ public class ThreadLocalProfiler {
 		createThreadLocalProfiler(threadProfiler.get());
 	}
 	
+	public static void setReporter(Reporter reporter) {
+		reporterAtomicReference.set(reporter);
+	}
+	
+	public static void setIfNotSet(Reporter reporter) {
+		reporterAtomicReference.compareAndSet(null, reporter);
+	}
+
+	
 	private static ThreadLocalProfiler createThreadLocalProfiler(ThreadLocalProfiler profiler) {
 		if (!isRunning(profiler)) {
 			if (isDisabled) {
-				tearDown();
 				return null;
 			}
 			else {
@@ -81,24 +94,6 @@ public class ThreadLocalProfiler {
 		else {
 			return profiler;
 		}
-	}
-
-	/**
-	 * Set setup required true or false <b>Note</b> this value is common for all
-	 * threads.
-	 */
-	public static void setSetupRequired(boolean value) {
-		isSetupRequired = value;
-	}
-
-	/**
-	 * Tells if ThreadLocalProfiler is disabled <b>Note</b> this value is common
-	 * for all threads.
-	 * 
-	 * @return boolean
-	 */
-	public static boolean isSetupRequired() {
-		return isSetupRequired;
 	}
 
 	/**
@@ -129,21 +124,7 @@ public class ThreadLocalProfiler {
 			return start(profiler);
 		}
 		else {
-			if(isSetupRequired()) {
-				if(profiler==null) {
-					return null;
-				}
-				else if(profiler.root==null) {
-					return start(profiler);
-				}
-				else {
-					return null;
-				}
-				
-			}
-			else {
-				return start(createThreadLocalProfiler(profiler));
-			}
+			return start(createThreadLocalProfiler(profiler));
 		}
 
 	}
@@ -234,19 +215,23 @@ public class ThreadLocalProfiler {
 			return;
 		}
 		profiler.doStop(watch, className, methodName, text);
+		
+		if(watch.isRoot()) {
+			writeReport(profiler);
+			threadProfiler.remove();
+		}
 	}
 
-	/**
-	 * Removes profiler from current thread
-	 */
-	public static void tearDown() {
-		threadProfiler.remove();
+	private static void writeReport(ThreadLocalProfiler profiler) {
+		Reporter reporter = reporterAtomicReference.get();
+		if(reporter!=null) {
+			reporter.report(report(profiler));
+		}
 	}
 
 	private static Watch[] EMTPY_REPORT = new Watch[0];
 
-	public static Watch[] report() {
-		ThreadLocalProfiler profiler = threadProfiler.get();
+	public static Watch[] report(ThreadLocalProfiler profiler) {
 		if (profiler == null) {
 			return EMTPY_REPORT;
 		} else {
