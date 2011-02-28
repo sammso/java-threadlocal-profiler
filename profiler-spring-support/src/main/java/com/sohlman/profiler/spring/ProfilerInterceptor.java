@@ -23,12 +23,17 @@ import org.aopalliance.intercept.MethodInvocation;
 
 import com.sohlman.profiler.ThreadLocalProfiler;
 import com.sohlman.profiler.Watch;
+import com.sohlman.profiler.Reporter;
 
 public class ProfilerInterceptor implements MethodInterceptor {
 	/**
 	 * Create a new PerformanceMonitorInterceptor with a static logger.
 	 */
 	public ProfilerInterceptor() {
+	}
+	
+	public ProfilerInterceptor(Reporter reporter) {
+		ThreadLocalProfiler.setReporter(reporter);	
 	}
 
 	private Class getClass(Method method, Invocation invocation) {
