@@ -63,14 +63,6 @@ public class ThreadLocalProfiler {
 		watchCounter = 0;
 	}
 
-	/**
-	 * To control start point of logging. if isSetupRequired is true (by default
-	 * false) then this method is required.
-	 */
-	public static void setUp() {
-		createThreadLocalProfiler(threadProfiler.get());
-	}
-	
 	public static void setReporter(Reporter reporter) {
 		reporterAtomicReference.set(reporter);
 	}
@@ -231,7 +223,7 @@ public class ThreadLocalProfiler {
 
 	private static Watch[] EMTPY_REPORT = new Watch[0];
 
-	public static Watch[] report(ThreadLocalProfiler profiler) {
+	private static Watch[] report(ThreadLocalProfiler profiler) {
 		if (profiler == null) {
 			return EMTPY_REPORT;
 		} else {
