@@ -25,10 +25,14 @@ public class ThreadProfilerTest {
 	
 	private HelperReporter testReporter;
 	
+	private TestTimer timer;
+	
 	@Before
 	public void setUpTest() {
 		testReporter = new HelperReporter();
 		ThreadLocalProfiler.setReporter(testReporter);
+		timer = new TestTimer();
+		Timer.setTimer(timer);
 	}
 	
 	private void method(int level, int maxLevel, int loopCount) {
@@ -37,9 +41,9 @@ public class ThreadProfilerTest {
 
 	private void method(int level, int maxLevel, int loopCount,
 			int noStopLevel, int loopCounter) {
-		sleep(10);
+		timer.sleep(10);
 		Watch watch = ThreadLocalProfiler.start();
-		sleep(10);
+		timer.sleep(10);
 		try {
 			if (level < maxLevel) {
 				for (int i = 0; i < loopCount; i++) {
@@ -56,11 +60,7 @@ public class ThreadProfilerTest {
 	}
 	
 	public void sleep(long millis) {
-		try {
-			Thread.currentThread().sleep(millis);
-		} catch (InterruptedException e) {
-			// Ignore
-		}
+		timer.sleep(millis);
 	}
 	
 	@Test
