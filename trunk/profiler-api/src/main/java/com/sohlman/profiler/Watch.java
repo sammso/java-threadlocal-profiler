@@ -32,7 +32,7 @@ public class Watch {
 			this.level = parent.getLevel() + 1;
 		}
 		this.parent = parent;
-		start = System.currentTimeMillis();
+		start = Timer.getInstance().time();
 	}
 
 	private Watch next = null;
@@ -132,7 +132,7 @@ public class Watch {
 
 	void stop(String className, String methodName, String text) {
 		if (this.end == 0) {
-			this.end = System.currentTimeMillis();
+			this.end = Timer.getInstance().time();
 			this.duration = this.end - this.start;
 			
 			this.className = className;

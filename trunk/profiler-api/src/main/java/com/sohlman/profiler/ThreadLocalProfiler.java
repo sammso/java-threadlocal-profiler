@@ -15,9 +15,7 @@
  */
 package com.sohlman.profiler;
 
-import java.io.ObjectInputStream.GetField;
 import java.lang.reflect.Method;
-import java.util.Formatter;
 import java.util.concurrent.atomic.AtomicReference;
 
 import com.sohlman.profiler.reporter.Reporter;
@@ -74,7 +72,7 @@ public class ThreadLocalProfiler {
 	
 	private static ThreadLocalProfiler createThreadLocalProfiler(ThreadLocalProfiler profiler) {
 		if (!isRunning(profiler)) {
-			if (isDisabled) {
+			if (isDisabled()) {
 				return null;
 			}
 			else {
@@ -103,7 +101,7 @@ public class ThreadLocalProfiler {
 	 * @return boolean
 	 */
 	public static boolean isDisabled() {
-		return isDisabled;
+		return isDisabled || reporterAtomicReference.get()==null;
 	}
 
 	/**
