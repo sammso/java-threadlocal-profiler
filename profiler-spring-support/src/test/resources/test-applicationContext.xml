@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans-2.5.xsd">
+
+	<bean id="testServiceChildChild" class="com.sohlman.profiler.spring.beans.ServiceImpl">
+		<constructor-arg value="10" />
+	</bean>
+
+	<bean id="testServiceChild" class="com.sohlman.profiler.spring.beans.ServiceImpl">
+		<constructor-arg ref="testServiceChildChild" />
+		<constructor-arg value="10" />
+	</bean>
+
+	<bean id="testServiceRoot" class="com.sohlman.profiler.spring.beans.ServiceImpl">
+		<constructor-arg ref="testServiceChild" />
+		<constructor-arg value="10" />
+	</bean>
+
+	<bean id="profilerInterceptor" class="com.sohlman.profiler.spring.ProfilerInterceptor" />
+
+	<bean id="profilerAroundAdvisor"
+		class="org.springframework.aop.support.RegexpMethodPointcutAdvisor">
+		<property name="advice" ref="profilerInterceptor" />
+		<property name="patterns">
+			<list>
+				<value>.*</value>
+			</list>
+		</property>
+	</bean>
+
+	<bean name="proxyCreator"
+		class="org.springframework.aop.framework.autoproxy.BeanNameAutoProxyCreator">
+		<property name="beanNames">
+			<list>
+				<value>*</value>
+			</list>
+		</property>
+		<property name="interceptorNames">
+			<list>
+				<value>profilerAroundAdvisor</value>
+			</list>
+		</property>
+	</bean>
+	
+
+</beans>
