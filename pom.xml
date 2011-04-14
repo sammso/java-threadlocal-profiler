@@ -28,5 +28,6 @@
 		<module>profiler-api</module>
 		<module>profiler-liferay</module>
 		<module>profiler-spring-support</module>
+		<module>profiler-test</module>
 	</modules>
 </project>

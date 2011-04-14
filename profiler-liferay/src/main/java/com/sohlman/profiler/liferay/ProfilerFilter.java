@@ -66,7 +66,6 @@ public class ProfilerFilter extends BasePortalFilter {
 			processFilter(ProfilerFilter.class, request, response, filterChain);
 
 		} else {
-			ThreadLocalProfiler.setUp();
 			Watch watch = ThreadLocalProfiler.start();
 			try {
 				processFilter(ProfilerFilter.class, request, response,

@@ -1,5 +1,5 @@
 /*
-   Copyright 2010-2011 Sampsa Sohlman http://sampsa.sohlman.com
+<   Copyright 2010-2011 Sampsa Sohlman http://sampsa.sohlman.com
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import org.aopalliance.intercept.MethodInvocation;
 
 import com.sohlman.profiler.ThreadLocalProfiler;
 import com.sohlman.profiler.Watch;
-import com.sohlman.profiler.Reporter;
+import com.sohlman.profiler.reporter.Reporter;
 
 public class ProfilerInterceptor implements MethodInterceptor {
 	/**
