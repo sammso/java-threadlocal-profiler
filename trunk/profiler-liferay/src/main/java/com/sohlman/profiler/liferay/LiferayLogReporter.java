@@ -15,7 +15,7 @@
  */
 package com.sohlman.profiler.liferay;
 import com.liferay.portal.kernel.log.Log;
-import com.sohlman.profiler.AbstractReporter;
+import com.sohlman.profiler.reporter.AbstractReporter;
 
 public class LiferayLogReporter extends AbstractReporter {
 	

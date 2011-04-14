@@ -16,7 +16,7 @@
 package com.sohlman.profiler;
 
 public class Watch {
-	private static String PROFILER_NOT_STOPPED_CORRECTLY = "PROFILER NOT STOPPED CORRECTLY";
+	public static final String PROFILER_NOT_STOP_METHOD_HAS_NOT_BEEN_CALLED = "PROFILER NOT STOP METHOD HAS NOT BEEN CALLED";
 	private String methodName;
 	private String className;
 	private String text;
@@ -139,7 +139,7 @@ public class Watch {
 			this.methodName = methodName;
 			this.text = text;
 			if( lastChild!=null) {
-				lastChild.stop(null, null,PROFILER_NOT_STOPPED_CORRECTLY);
+				lastChild.stop(null, null,PROFILER_NOT_STOP_METHOD_HAS_NOT_BEEN_CALLED);
 			}
 		}
 	}

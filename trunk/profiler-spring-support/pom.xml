@@ -1,34 +1,69 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <artifactId>profiler</artifactId>
-    <groupId>com.sohlman.profiler</groupId>
-    <version>0.2.1-SNAPSHOT</version>
-  </parent>
-  <groupId>com.sohlman.profiler</groupId>
-  <artifactId>profiler-spring-support</artifactId>
-  <version>0.2.1-SNAPSHOT</version>
-  <name>ThreadLocalProfiler Spring support</name>
-  <description>Spring support for thread local profiler</description>
-  <url>http://code.google.com/p/java-threadlocal-profiler/</url>
-  <organization>
-  	<name>Sampsa Sohlman</name>
-  	<url>http://sampsa.sohlman.com</url>
-  </organization>
-  <dependencies>
-  	<dependency>
-  		<groupId>org.springframework</groupId>
-  		<artifactId>spring</artifactId>
-  		<version>[2.0,)</version>
-  		<type>jar</type>
-  		<scope>provided</scope>
-  	</dependency>
-  	<dependency>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<artifactId>profiler</artifactId>
 		<groupId>com.sohlman.profiler</groupId>
-		<artifactId>profiler-api</artifactId>
 		<version>0.2.1-SNAPSHOT</version>
-  	</dependency>
-  </dependencies>
-  <reporting>
-  </reporting>  
+	</parent>
+	<groupId>com.sohlman.profiler</groupId>
+	<artifactId>profiler-spring-support</artifactId>
+	<version>0.2.1-SNAPSHOT</version>
+	<name>ThreadLocalProfiler Spring support</name>
+	<description>Spring support for thread local profiler</description>
+	<url>http://code.google.com/p/java-threadlocal-profiler/</url>
+	<organization>
+		<name>Sampsa Sohlman</name>
+		<url>http://sampsa.sohlman.com</url>
+	</organization>
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-core</artifactId>
+			<version>[2.0,)</version>
+			<type>jar</type>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context</artifactId>
+			<version>[2.0,)</version>
+			<type>jar</type>
+			<scope>provided</scope>
+		</dependency>		
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-test</artifactId>
+			<version>[2.0,)</version>
+			<scope>provided</scope>
+			<type>jar</type>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-aop</artifactId>
+			<version>[2.0,)</version>
+			<type>jar</type>
+			<scope>provided</scope>
+		</dependency>		
+		<dependency>
+			<groupId>com.sohlman.profiler</groupId>
+			<artifactId>profiler-api</artifactId>
+			<version>0.2.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.8.1</version>
+			<type>jar</type>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.sohlman.profiler</groupId>
+			<artifactId>profiler-test</artifactId>
+			<version>0.2.1-SNAPSHOT</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+	<reporting>
+	</reporting>
 </project>

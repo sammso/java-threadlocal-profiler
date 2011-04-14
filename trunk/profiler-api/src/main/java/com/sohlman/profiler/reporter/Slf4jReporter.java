@@ -28,6 +28,11 @@ public class Slf4jReporter extends AbstractReporter {
 		super(thresHoldMillis, rowIdentifier, thresholdReachedIdentifier);
 		this.logger = logger;
 	}
+	
+	public Slf4jReporter(long thresHoldMillis, String rowIdentifier,
+			String thresholdReachedIdentifier, boolean isThresholdReportEnabled, String loggerName) {		
+		this(thresHoldMillis, rowIdentifier, thresholdReachedIdentifier, LoggerFactory.getLogger(loggerName));
+	}	
 
 	public Slf4jReporter(long thresHoldMillis, String rowIdentifier,
 			String thresholdReachedIdentifier, boolean isThresholdReportEnabled) {		

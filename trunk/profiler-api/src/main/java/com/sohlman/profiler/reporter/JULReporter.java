@@ -31,6 +31,11 @@ public class JULReporter extends AbstractReporter {
 			String thresholdReachedIdentifier, boolean isThresholdReportEnabled) {		
 		this(thresHoldMillis, rowIdentifier, thresholdReachedIdentifier, Logger.getLogger(JULReporter.class.getName()));
 	}
+	
+	public JULReporter(long thresHoldMillis, String rowIdentifier,
+			String thresholdReachedIdentifier, boolean isThresholdReportEnabled, String loggerName) {		
+		this(thresHoldMillis, rowIdentifier, thresholdReachedIdentifier, Logger.getLogger(loggerName));
+	}	
 
 	@Override
 	public boolean isThresholdReportEnabled() {

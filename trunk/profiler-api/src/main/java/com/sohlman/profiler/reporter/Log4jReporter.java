@@ -29,6 +29,11 @@ public class Log4jReporter extends AbstractReporter {
 	}
 
 	public Log4jReporter(long thresHoldMillis, String rowIdentifier,
+			String thresholdReachedIdentifier, boolean isThresholdReportEnabled, String loggerName) {		
+		this(thresHoldMillis, rowIdentifier, thresholdReachedIdentifier, Logger.getLogger(loggerName));
+	}	
+	
+	public Log4jReporter(long thresHoldMillis, String rowIdentifier,
 			String thresholdReachedIdentifier, boolean isThresholdReportEnabled) {		
 		this(thresHoldMillis, rowIdentifier, thresholdReachedIdentifier, Logger.getLogger(Log4jReporter.class));
 	}

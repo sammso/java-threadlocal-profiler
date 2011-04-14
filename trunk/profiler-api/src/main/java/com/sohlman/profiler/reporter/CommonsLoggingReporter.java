@@ -33,6 +33,11 @@ public class CommonsLoggingReporter extends AbstractReporter {
 		this(thresHoldMillis, rowIdentifier, thresholdReachedIdentifier, LogFactory.getLog(CommonsLoggingReporter.class));
 	}
 
+	public CommonsLoggingReporter(long thresHoldMillis, String rowIdentifier,
+			String thresholdReachedIdentifier, boolean isThresholdReportEnabled, String loggerName) {		
+		this(thresHoldMillis, rowIdentifier, thresholdReachedIdentifier, LogFactory.getLog(loggerName));
+	}	
+	
 	@Override
 	public boolean isThresholdReportEnabled() {
 		return log.isWarnEnabled(); //logger.isLoggable(Level.WARNING);
